@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # - registry: catalogo dei tool
 # - router: selezione dei tool più pertinenti
 from app.api.registry import router as registry_router
-# from app.api.router import router as scope_router // da decommentare quando si implementa il router
+from app.api.router import router as scope_router
 
 # Punto di ingresso del backend.
 app = FastAPI(
@@ -25,7 +25,7 @@ app.add_middleware(
 
 # Registrazione dei moduli REST.
 app.include_router(registry_router, prefix="/api/registry", tags=["registry"])
-# app.include_router(scope_router, prefix="/api/router", tags=["router"]) // da decommentare quando si implementa il router
+app.include_router(scope_router, prefix="/api/router", tags=["router"])
 
 @app.get("/")
 def root():
