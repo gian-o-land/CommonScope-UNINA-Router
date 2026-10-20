@@ -2,8 +2,11 @@ import re
 from fastapi import APIRouter
 from app.models.request import ScopeRequest
 from app.services.memory_store import get_all_tools
+from sentence_transformers import SentenceTransformer, util
 
 router = APIRouter()
+
+model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # --- STRATEGIA v0: Baseline (Ricerca per sottostringa) ---
 def score_tool_v0(tool, req: ScopeRequest) -> tuple[float, list[str]]:
@@ -58,6 +61,35 @@ def score_tool_v1(tool, req: ScopeRequest) -> tuple[float, list[str]]:
 
     return score, reasons
 
+# --- STRATEGIA v2: Semantic Matching ---
+def score_tool_v2(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+    score = 0.0
+    reasons = []
+    
+    # Uniamo le parole chiave del tool per creare un "profilo" testuale
+    profilo_tool = f"{tool.name} " + " ".join(tool.scope_tags + tool.capabilities + [tool.description])
+    
+    # Convertiamo la richiesta e il profilo in vettori matematici
+    vettore_richiesta = model.encode(req.text, convert_to_tensor=True)
+    vettore_tool = model.encode(profilo_tool, convert_to_tensor=True)
+    
+    # Calcoliamo la distanza del coseno tra i due vettori (similarità semantica)
+    cosine_score = util.cos_sim(vettore_richiesta, vettore_tool).item()
+    
+    # Trasformiamo la similarità in un punteggio, se la similarità è sopra una certa soglia
+    if cosine_score > 0.2:
+        punti_semantici = cosine_score * 5.0
+        score += punti_semantici
+        reasons.append(f"[v2] Match Semantico ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+    else:
+        reasons.append(f"[v2] Affinità semantica troppo bassa ({cosine_score:.2f})")
+
+    # Aggiungiamo i bonus statici di dominio se applicabili
+    if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
+        score += 1.5
+        reasons.append(f"[v2] Boost dominio esatto: '{req.domain}' (+1.5)")
+
+    return score, reasons
 
 @router.post("/match")
 def match_scope(req: ScopeRequest):
@@ -71,6 +103,8 @@ def match_scope(req: ScopeRequest):
                 s, explanations = score_tool_v0(tool, req)
             case "v1":
                 s, explanations = score_tool_v1(tool, req)
+            case "v2":
+                s, explanations = score_tool_v2(tool, req)
             
         ranked.append({
             "tool_id": tool.id,
