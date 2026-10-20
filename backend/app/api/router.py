@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 
 router = APIRouter()
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
 
 # --- STRATEGIA v0: Baseline (Ricerca per sottostringa) ---
 def score_tool_v0(tool, req: ScopeRequest) -> tuple[float, list[str]]:
