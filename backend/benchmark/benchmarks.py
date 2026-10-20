@@ -4,7 +4,7 @@ from benchmark.test_cases import TEST_CASES
 
 def run_benchmarks():
     # Le strategie che vogliamo testare
-    strategie = ["v0", "v1", "v2"]
+    strategie = ["v0", "v1", "v2", "v3"]
     
     # Dizionario per tenere traccia dei successi
     risultati = {strat: 0 for strat in strategie}

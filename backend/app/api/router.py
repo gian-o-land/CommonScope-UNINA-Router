@@ -91,18 +91,64 @@ def score_tool_v2(tool, req: ScopeRequest) -> tuple[float, list[str]]:
 
     return score, reasons
 
+# --- STRATEGIA v3: Hybrid Search (Token + Semantica) ---
+def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+    score = 0.0
+    reasons = ["[v3] Analisi Ibrida:"]
+    
+    # 1. Ricerca Esatta (Token)
+    text = req.text.lower()
+    parole_richiesta = set(re.findall(r'\b\w+\b', text))
+
+    token_score = 0.0
+    for tag in tool.scope_tags:
+        if tag.lower() in parole_richiesta:
+            token_score += 1.0
+            reasons.append(f"  - Match parola chiave: '{tag}' (+1.0)")
+            
+    for cap in req.desired_capabilities:
+        if cap in tool.capabilities:
+            token_score += 2.0
+            reasons.append(f"  - Match capability: '{cap}' (+2.0)")
+
+    score += token_score
+
+    # 2. Ricerca Semantica
+    profilo_tool = f"{tool.name} " + " ".join(tool.scope_tags + tool.capabilities + [tool.description])
+    vettore_richiesta = model.encode(req.text, convert_to_tensor=True)
+    vettore_tool = model.encode(profilo_tool, convert_to_tensor=True)
+    cosine_score = util.cos_sim(vettore_richiesta, vettore_tool).item()
+    
+    if cosine_score > 0.2:
+        punti_semantici = cosine_score * 5.0
+        score += punti_semantici
+        reasons.append(f"  - Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+
+    # 3. Boost sul Dominio (Applicato una sola volta)
+    if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
+        score += 1.5
+        reasons.append(f"  - Boost dominio esatto: '{req.domain}' (+1.5)")
+
+    if score == 0.0:
+        reasons = ["[v3] Nessuna corrispondenza trovata (né esatta né semantica)."]
+
+    return score, reasons
+
 @router.post("/match")
 def match_scope(req: ScopeRequest):
     ranked = []
     tools_attuali = get_all_tools()
     
     for tool in tools_attuali:
-        if req.strategy == "v0":
-            s, explanations = score_tool_v0(tool, req)
-        elif req.strategy == "v1":
-            s, explanations = score_tool_v1(tool, req)
-        else:
-            s, explanations = score_tool_v2(tool, req)
+        match req.strategy:
+            case "v0":
+                s, explanations = score_tool_v0(tool, req)
+            case "v1":
+                s, explanations = score_tool_v1(tool, req)
+            case "v2":
+                s, explanations = score_tool_v2(tool, req)
+            case "v3":
+                s, explanations = score_tool_v3(tool, req)
             
         # Filtriamo via i tool che non hanno superato i controlli (score a 0)
         if s > 0:
