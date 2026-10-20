@@ -14,27 +14,30 @@ def run_benchmarks():
     for i, test in enumerate(TEST_CASES, 1):
         print(f"Test {i}: {test['desc']}")
         print(f"Query: '{test['query']}'")
-        print(f"Atteso: {test['expected_id']}")
-        print("-" * 40)
+        print(f"Atteso: {test['expected_ids']}")
+        print("-" * 50)
+
+        k_necessari = max(1, len(test["expected_ids"]))
         
         for strat in strategie:
             # Creiamo la richiesta specificando la strategia
-            req = ScopeRequest(text=test["query"], top_k=1, strategy=strat)
+            req = ScopeRequest(text=test["query"], top_k=k_necessari, strategy=strat)
             risposta = match_scope(req)
             
-            best_match = None
-            score = 0.0
+            # Estraiamo tutti gli ID che hanno uno score > 0
+            ottenuti_ids = [res["tool_id"] for res in risposta["results"] if res["score"] > 0]
+
+            #Estrazione dettagliata dei risultati ottenuti
+            ottenuti_dettagliati = [f"{res['tool_id']} ({res['score']:.2f})" for res in risposta["results"] if res["score"] > 0]
             
-            if risposta["results"] and risposta["results"][0]["score"] > 0:
-                best_match = risposta["results"][0]["tool_id"]
-                score = risposta["results"][0]["score"]
-                
-            esito = "✅ PASS" if best_match == test["expected_id"] else "❌ FAIL"
+            # Un test passa se restituisce ESATTAMENTE gli elementi richiesti (ignorando l'ordine)
+            esito_ok = set(ottenuti_ids) == set(test["expected_ids"])
             
-            if best_match == test["expected_id"]:
+            esito = "✅ PASS" if esito_ok else "❌ FAIL"
+            if esito_ok:
                 risultati[strat] += 1
                 
-            print(f"  [{strat}] Ottenuto: {best_match} (Score: {score}) -> {esito}")
+            print(f"  [{strat}] Ottenuti: {ottenuti_dettagliati} -> {esito}")
             
         print("=" * 60 + "\n")
     
