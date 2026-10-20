@@ -97,21 +97,59 @@ def match_scope(req: ScopeRequest):
     tools_attuali = get_all_tools()
     
     for tool in tools_attuali:
-        # Selettore di strategia
-        match req.strategy:
-            case "v0":
-                s, explanations = score_tool_v0(tool, req)
-            case "v1":
-                s, explanations = score_tool_v1(tool, req)
-            case "v2":
-                s, explanations = score_tool_v2(tool, req)
+        if req.strategy == "v0":
+            s, explanations = score_tool_v0(tool, req)
+        elif req.strategy == "v1":
+            s, explanations = score_tool_v1(tool, req)
+        else:
+            s, explanations = score_tool_v2(tool, req)
             
-        ranked.append({
-            "tool_id": tool.id,
-            "tool_name": tool.name,
-            "score": s,
-            "reason": explanations
-        })
+        # Filtriamo via i tool che non hanno superato i controlli (score a 0)
+        if s > 0:
+            ranked.append({
+                "tool_id": tool.id,
+                "tool_name": tool.name,
+                "primary_scope": tool.scope_tags[0] if tool.scope_tags else "unknown",
+                "score": round(s, 2),
+                "reason": explanations
+            })
         
+    # Ordiniamo prima per punteggio assoluto
     ranked.sort(key=lambda x: x["score"], reverse=True)
-    return {"query": req.dict(), "results": ranked[:req.top_k]}
+    
+    
+    final_results = diversity_ranking(ranked, req.top_k) if req.diversify_results else ranked[:req.top_k]
+    
+    # Puliamo l'output nascondendo la variabile d'appoggio primary_scope
+    for r in final_results:
+        r.pop("primary_scope", None)
+
+    # Restituiamo il dizionario col formato corretto
+    return {"query": req.dict(), "results": final_results}
+
+# Algoritmo per diversificare i risultati: prende il migliore per ogni scope fino a riempire il top_k
+def diversity_ranking(ranked, top_k):
+    final_results = []
+    visti_scope = set()
+    
+    # 1. Passata principale: prendiamo il migliore per ogni categoria (scope)
+    for item in ranked:
+        if item["primary_scope"] not in visti_scope:
+            final_results.append(item)
+            visti_scope.add(item["primary_scope"])
+        if len(final_results) == top_k:
+            break
+            
+    # 2. Se non abbiamo riempito il top_k (perché c'erano pochi scope diversi),
+    #    riempiamo i buchi rimanenti con i tool migliori scartati prima
+    if len(final_results) < top_k:
+        for item in ranked:
+            if item not in final_results:
+                final_results.append(item)
+            if len(final_results) == top_k:
+                break
+                
+    # Riordiniamo la lista finale mista in base allo score per coerenza di lettura
+    final_results.sort(key=lambda x: x["score"], reverse=True)
+    
+    return final_results

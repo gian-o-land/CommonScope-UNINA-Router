@@ -8,3 +8,4 @@ class ScopeRequest(BaseModel):
     domain: Optional[str] = None
     top_k: int = 3
     strategy: str = "v2" # Possibili valori: "v0" (baseline/substrig), "v1" (token-based), "v2" (semantic-based)
+    diversify_results: bool = True
