@@ -155,7 +155,7 @@ def match_scope(req: ScopeRequest):
             ranked.append({
                 "tool_id": tool.id,
                 "tool_name": tool.name,
-                "primary_scope": tool.scope_tags[0] if tool.scope_tags else "unknown",
+                "tags": [t.lower() for t in tool.scope_tags],
                 "score": round(s, 2),
                 "reason": explanations
             })
@@ -166,9 +166,9 @@ def match_scope(req: ScopeRequest):
     
     final_results = diversity_ranking(ranked, req.top_k) if req.diversify_results else ranked[:req.top_k]
     
-    # Puliamo l'output nascondendo la variabile d'appoggio primary_scope
+    # Puliamo l'output nascondendo la variabile d'appoggio all_tags
     for r in final_results:
-        r.pop("primary_scope", None)
+        r.pop("tags", None)
 
     # Restituiamo il dizionario col formato corretto
     return {"query": req.dict(), "results": final_results}
@@ -176,13 +176,17 @@ def match_scope(req: ScopeRequest):
 # Algoritmo per diversificare i risultati: prende il migliore per ogni scope fino a riempire il top_k
 def diversity_ranking(ranked, top_k):
     final_results = []
-    visti_scope = set()
+    visti_tags = set()
     
     # 1. Passata principale: prendiamo il migliore per ogni categoria (scope)
     for item in ranked:
-        if item["primary_scope"] not in visti_scope:
+        item_tags = set(item["tags"])
+
+        # Se l'intersezione è vuota, questo tool copre ambiti completamente nuovi
+        if not item_tags.intersection(visti_tags):
             final_results.append(item)
-            visti_scope.add(item["primary_scope"])
+            visti_tags.update(item_tags) # Registriamo i domini appena coperti
+            
         if len(final_results) == top_k:
             break
             

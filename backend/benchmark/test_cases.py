@@ -24,7 +24,7 @@ TEST_CASES = [
         "desc": "Sinonimi non previsti dai tag"
     },
     {
-        "query": "Aggiungo semantic dilution per testare i limiti della strategia v2. Nel frattempo, mi serve un ocr per scansionare i log cartacei e fare sentiment_analysis sulle email di insulti ricevute.",
+        "query": "Aggiungo semantic dilution per testare i limiti della strategia v2. Il database del server è esploso stamattina e abbiamo perso i dati. Il cliente è furioso. Nel frattempo, mi serve un ocr per fare un extract_text da un document cartaceo e fare sentiment_analysis sulle email di insulti.",
         "expected_ids": ["nlp-sentiment-local-1", "registry-2"], 
         "desc": "Diluizione estrema: v2 affoga nel rumore, v3 intercetta le capability esatte"
     }
