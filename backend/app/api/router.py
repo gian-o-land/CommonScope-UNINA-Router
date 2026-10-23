@@ -1,5 +1,5 @@
 import re
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.models.request import ScopeRequest
 from app.services.memory_store import get_all_tools
 from sentence_transformers import SentenceTransformer, util
@@ -149,6 +149,8 @@ def match_scope(req: ScopeRequest):
                 s, explanations = score_tool_v2(tool, req)
             case "v3":
                 s, explanations = score_tool_v3(tool, req)
+            case _: # Fallback per strategie sconosciute
+                raise HTTPException(status_code=422, detail="Strategia non supportata")
             
         # Filtriamo via i tool che non hanno superato i controlli (score a 0)
         if s > 0:
@@ -171,7 +173,7 @@ def match_scope(req: ScopeRequest):
         r.pop("tags", None)
 
     # Restituiamo il dizionario col formato corretto
-    return {"query": req.dict(), "results": final_results}
+    return {"query": req.model_dump(), "results": final_results}
 
 # Algoritmo per diversificare i risultati: prende il migliore per ogni scope fino a riempire il top_k
 def diversity_ranking(ranked, top_k):
