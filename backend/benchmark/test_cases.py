@@ -15,7 +15,7 @@ TEST_CASES = [
     },
     {
         "query": "devo capire se questa recensione è positiva o negativa",
-        "expected_ids": ["nlp-sentiment-local-1"], 
+        "expected_ids": ["registry-4"], 
         "desc": "Richiesta semantica senza keyword tecniche"
     },
     {
@@ -25,7 +25,12 @@ TEST_CASES = [
     },
     {
         "query": "Aggiungo semantic dilution per testare i limiti della strategia v2. Stamattina abbiamo perso i dati. Il cliente è furioso. Nel frattempo, mi serve un ocr per fare un extract_text da un document cartaceo e fare sentiment_analysis sulle email di insulti.",
-        "expected_ids": ["nlp-sentiment-local-1", "registry-2"], 
+        "expected_ids": ["registry-4", "registry-2"], 
         "desc": "Diluizione estrema: v2 affoga nel rumore, v3 intercetta le capability esatte"
+    },
+    {
+        "query": "ho una registrazione vocale, puoi tradurre quello che dicono?",
+        "expected_ids": ["registry-6"], 
+        "desc": "Recupero cross-domain (Audio + NLP) senza keyword esatte"
     }
 ]

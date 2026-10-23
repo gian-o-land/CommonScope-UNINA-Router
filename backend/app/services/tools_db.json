@@ -70,109 +70,72 @@
         "status": "active",
         "owner": "lab"
     },
-    {
-        "id": "nlp-sentiment-local-1",
-        "name": "Analizzatore di Sentimenti Base",
-        "description": "modello NLP leggero per estrarre la polarit\u00e0 da testi brevi.",
-        "version": "0.1.0",
-        "scope_tags": [
-            "nlp"
-        ],
-        "capabilities": [
-            "sentiment_analysis"
-        ],
-        "input_schema": {
-            "type": "json"
-        },
-        "output_schema": {
-            "type": "json"
-        },
-        "endpoint": "http://127.0.0.1:8001/analyze-sentiment",
-        "status": "active",
-        "owner": "lab"
+  {
+    "id": "registry-4",
+    "name": "SentimentAnalyzer BERT",
+    "description": "Modello NLP per estrarre la polarità emotiva da testi brevi.",
+    "version": "0.1.0",
+    "scope_tags": [
+        "nlp", "text"
+    ],
+    "capabilities": [
+        "sentiment_analysis"
+    ],
+    "input_schema": {
+        "type": "text"
     },
-    {
-        "id": "test-1_1.0.0",
-        "name": "test 1",
-        "description": "descrizione test",
-        "version": "1.0.0",
-        "scope_tags": [
-            "classification"
-        ],
-        "capabilities": [
-            "return_top_label"
-        ],
-        "input_schema": {
-            "type": "text"
-        },
-        "output_schema": {
-            "type": "label"
-        },
-        "endpoint": "http://endpoint.com",
-        "status": "active",
-        "owner": "<sconosciuto>"
+    "output_schema": {
+        "type": "label"
     },
-    {
-        "id": "test-1_2.0.0",
-        "name": "test 1",
-        "description": "descrizione test",
-        "version": "2.0.0",
-        "scope_tags": [
-            "classification"
-        ],
-        "capabilities": [
-            "return_top_label"
-        ],
-        "input_schema": {
-            "type": "text"
-        },
-        "output_schema": {
-            "type": "label"
-        },
-        "endpoint": "http://endpoint1.com",
-        "status": "active",
-        "owner": "<sconosciuto>"
+    "endpoint": "http://localhost:8000/mock/sentiment",
+    "status": "active",
+    "owner": "lab"
+  },
+  {
+    "id": "registry-5",
+    "name": "Financial Data Scraper",
+    "description": "Analizza documenti testuali per estrarre trend finanziari. (Distrattore per il Router)",
+    "version": "0.1.0",
+    "scope_tags": [
+        "data",
+        "analysis",
+        "document"
+    ],
+    "capabilities": [
+        "extract_text",
+        "analyze_trends"
+    ],
+    "input_schema": {
+        "type": "json"
     },
-    {
-        "id": "nuovo-1-modifica_1.1.0",
-        "name": "nuovo 1 modifica",
-        "description": "ciao",
-        "version": "1.1.0",
-        "scope_tags": [
-            "ocr"
-        ],
-        "capabilities": [
-            "recognize_characters"
-        ],
-        "input_schema": {
-            "type": "image_or_pdf"
-        },
-        "output_schema": {
-            "type": "text"
-        },
-        "endpoint": "https://io.c",
-        "status": "active",
-        "owner": "io"
+    "output_schema": {
+        "type": "json"
     },
-    {
-        "id": "nuovo-1-modifica_2.0.0",
-        "name": "nuovo 1 modifica",
-        "description": "ciao",
-        "version": "2.0.0",
-        "scope_tags": [
-            "ocr"
-        ],
-        "capabilities": [
-            "recognize_characters"
-        ],
-        "input_schema": {
-            "type": "image_or_pdf"
-        },
-        "output_schema": {
-            "type": "text"
-        },
-        "endpoint": "https://io.c",
-        "status": "active",
-        "owner": "io"
-    }
+    "endpoint": "http://localhost:8000/mock/finance",
+    "status": "active",
+    "owner": "lab"
+  },
+  {
+    "id": "registry-6",
+    "name": "AudioTranscriber Whisper",
+    "description": "Trascrive file audio vocali in testo e li traduce.",
+    "version": "0.1.0",
+    "scope_tags": [
+        "audio",
+        "nlp"
+    ],
+    "capabilities": [
+        "transcribe_audio",
+        "translate"
+    ],
+    "input_schema": {
+        "type": "audio"
+    },
+    "output_schema": {
+        "type": "text"
+    },
+    "endpoint": "http://localhost:8000/mock/whisper",
+    "status": "active",
+    "owner": "lab"
+  }
 ]
