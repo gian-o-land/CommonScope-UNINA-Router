@@ -5,269 +5,47 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CommonScope Starter</title>
   <link rel="stylesheet" href="styles.css" />
-  
-  <!-- REGOLE DI UNIFORMITÀ VISIVA (State of the Art UI) -->
-  <style>
-    /* Standardizzazione di tutti i campi di input, select, textarea e bottoni */
-    /* --- TOAST NOTIFICATIONS --- */
-    #toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    
-    .toast {
-      padding: 16px 20px;
-      color: white;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      font-size: 0.95rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      transform: translateX(120%);
-      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 4); /* Effetto rimbalzo */
- }
-    
-    .toast.show {
-      opacity: 1;
-      transform: translateX(0);
-    }
-    
-    .toast.success { background-color: #10b981; } /* Verde */
-    .toast.error { background-color: #ef4444; }   /* Rosso */
-    .toast.warning { background-color: #f59e0b; } /* Arancione */
-    .card input[type="text"], 
-    .card input[type="url"], 
-    .card select, 
-    .card textarea, 
-    .card button,
-    .uniform-input {
-      font-family: inherit;
-      font-size: 0.95rem;
-      padding: 12px 16px; 
-      border-radius: 8px; 
-      border: 1px solid var(--border, #cbd5e1);
-      box-sizing: border-box;
-      width: 100%;
-      margin: 0; 
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    
-    .card input:focus, .card select:focus, .card textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-
-    /* Standardizzazione dei bottoni principali */
-    .card button {
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      color: white;
-      transition: filter 0.2s;
-    }
-    .card button:hover {
-      filter: brightness(0.95);
-    }
-    .card button:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    /* Allineamento Testi nelle Card */
-    .card h2, .card h3 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      color: #1e293b;
-    }
-    .card p.subtitle {
-      color: var(--muted, #64748b);
-      font-size: 0.9em;
-      margin-top: 0;
-      margin-bottom: 20px;
-    }
-  </style>
 </head>
-<!-- Contenitore per le notifiche a comparsa -->
-  <div id="toast-container"></div>
 <body>
+  <!-- GUI iniziale:
+       - visualizza i tool del Registry
+       - permette una query al Router
+       - mostra una roadmap minima -->
   <header class="topbar">
     <h1>CommonScope Starter</h1>
     <p>Registry + Router + prima interfaccia grafica</p>
   </header>
 
   <main class="layout">
-    
-    <!-- 1. SEZIONE TOOL REGISTRY -->
-<section class="card" style="border-top: 4px solid #3b82f6;">
-      <h2>📑 Tool Registry</h2>
-      <p class="subtitle">Mostra i tool attualmente caricati nel backend.</p>
-      
-      <button id="loadToolsBtn" style="background: #3b82f6; margin-bottom: 15px;">🔽Mostra Tools Registrati </button>
-      <ul id="toolsList" style="margin-top: 0;"></ul>
-
-      <hr style="margin: 24px 0; border: 0; border-top: 1px solid var(--border, #e2e8f0);" />
-      <h3>Aggiungi Nuovo Tool</h3>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-        
-        <!-- Riga 1 -->
-        <input id="newToolName" type="text" placeholder="Nome del Tool *" />
-        <input id="newToolId" type="text" placeholder="ID (generato in automatico)" readonly style="background-color: #f8fafc; color: #94a3b8; cursor: not-allowed;" title="L'ID viene generato automaticamente dal nome" />
-        
-        <!-- Riga 2: Scope e Capabilities -->
-        <div style="position: relative; width: 100%;">
-          <button type="button" id="scopeDropdownBtn" style="background: white; color: var(--text, #333); border: 1px solid var(--border, #cbd5e1); text-align: left;">
-            Seleziona Scope (Settore) * ▼
-          </button>
-          
-          <!-- MENU TENDINA SCOPE (Altezza max 250px per attivare lo scroll) -->
-          <div id="scopeDropdownMenu" style="display: none; position: absolute; background: white; border: 1px solid var(--border, #cbd5e1); width: 100%; max-height: 250px; overflow-y: auto; z-index: 10; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 4px; padding: 8px; box-sizing: border-box;">
-            
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="vision" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>vision</strong><br><span style="color: var(--muted); font-size: 0.85em;">Analisi, elaborazione e comprensione di dati visivi e immagini.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="classification" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>classification</strong><br><span style="color: var(--muted); font-size: 0.85em;">Categorizzazione generale di dati in classi predefinite.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="document" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>document</strong><br><span style="color: var(--muted); font-size: 0.85em;">Elaborazione e comprensione della struttura di documenti.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="ocr" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>ocr</strong><br><span style="color: var(--muted); font-size: 0.85em;">Riconoscimento ottico dei caratteri (Optical Character Recognition).</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="planning" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>planning</strong><br><span style="color: var(--muted); font-size: 0.85em;">Pianificazione logica e schedulazione di azioni o task.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="maps" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>maps</strong><br><span style="color: var(--muted); font-size: 0.85em;">Gestione di dati spaziali, mappe e coordinate.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="routing" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>routing</strong><br><span style="color: var(--muted); font-size: 0.85em;">Calcolo e ottimizzazione di percorsi (fisici o logici).</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="nlp" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>nlp</strong><br><span style="color: var(--muted); font-size: 0.85em;">Elaborazione e comprensione del linguaggio naturale.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="text" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>text</strong><br><span style="color: var(--muted); font-size: 0.85em;">Manipolazione e analisi standard di stringhe testuali.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="analysis" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>analysis</strong><br><span style="color: var(--muted); font-size: 0.85em;">Analisi avanzata di dati per dedurre informazioni.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0; border-bottom: 1px solid #f1f5f9;">
-              <input type="checkbox" value="audio" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>audio</strong><br><span style="color: var(--muted); font-size: 0.85em;">Elaborazione e riconoscimento di segnali sonori o vocali.</span></span>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; cursor: pointer; margin: 0;">
-              <input type="checkbox" value="data" style="width: auto; margin-top: 4px; padding: 0;"> 
-              <span style="font-size: 0.9em;"><strong>data</strong><br><span style="color: var(--muted); font-size: 0.85em;">Manipolazione, pulizia e strutturazione di dataset.</span></span>
-            </label>
-          </div>
-        </div>        
-
-        <div style="position: relative; width: 100%;">
-          <button type="button" id="capsDropdownBtn" style="background: #f8fafc; color: #94a3b8; border: 1px solid var(--border, #cbd5e1); text-align: left; cursor: not-allowed;">
-            Seleziona prima uno Scope...
-          </button>
-          
-          <!-- MENU TENDINA CAPABILITIES -->
-          <div id="capsDropdownMenu" style="display: none; position: absolute; background: white; border: 1px solid var(--border, #cbd5e1); width: 100%; max-height: 180px; overflow-y: auto; z-index: 10; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 4px; padding: 8px; box-sizing: border-box;">
-          </div>
-        </div>
-
-        <!-- Riga 3 - AGGIORNATA PER SUPPORTARE IL JS DINAMICO -->
-        <select id="newToolInput" disabled style="background: #f8fafc; color: #94a3b8; border: 1px solid var(--border, #cbd5e1); cursor: not-allowed;">
-          <option value="" disabled selected>Seleziona prima uno Scope...</option>
-        </select>
-        
-        <select id="newToolOutput" disabled style="background: #f8fafc; color: #94a3b8; border: 1px solid var(--border, #cbd5e1); cursor: not-allowed;">
-          <option value="" disabled selected>Seleziona prima uno Scope...</option>
-        </select>
-        
-        <!-- Riga 4 -->
-        <input id="newToolOwner" type="text" placeholder="Proprietario" />
-        <input id="newToolEndpoint" type="url" placeholder="Endpoint URL (es. http://...) *" />        
-      </div>
-
-      <textarea id="newToolDesc" rows="3" placeholder="Descrizione del tool" style="resize: none; margin-bottom: 8px;"></textarea>      
-      
-      <p style="font-size: 0.8em; color: var(--muted, #64748b); margin-bottom: 16px;">
-        * I campi contrassegnati dall'asterisco sono obbligatori.
-      </p>
-
-<div style="display: flex; gap: 12px; margin-top: 8px;">
-  <button id="cancelEditBtn" style="background: #64748b; color: white; display: none; flex: 1;">❌ Annulla Modifica</button>
-  <button id="createToolBtn" style="background: #10b981; flex: 2;">+ Aggiungi Tool</button>
-</div>      
+    <section class="card">
+      <h2>Tool Registry</h2>
+      <p>Mostra i tool attualmente caricati nel backend.</p>
+      <button id="loadToolsBtn">Carica tool</button>
+      <ul id="toolsList"></ul>
     </section>
 
-    <!-- 2. SEZIONE SCOPE ROUTER -->
-    <section class="card" style="border-top: 4px solid #e4d500;">
-      <h2>🔍 Scope Router</h2>
-      <p class="subtitle">Invia una richiesta al Router e mostra i tool più pertinenti.</p>
-      
-      <textarea id="queryText" rows="4" style="resize: none; margin-bottom: 16px;">I need to understand from a phrase the sentiment and the emotions of that text.</textarea>
-      
-      <button id="routeBtn" style="background: #e4d500;">Esegui matching</button>
+    <section class="card">
+      <h2>Scope Router</h2>
+      <p>Invia una richiesta al Router e mostra i tool più pertinenti.</p>
+      <label>Richiesta</label>
+      <textarea id="queryText" rows="5">Ho bisogno di estrarre testo da un documento.</textarea>
+      <label>Dominio (opzionale)</label>
+      <input id="domainText" type="text" placeholder="document" />
+      <button id="routeBtn">Esegui matching</button>
       <div id="routeResults"></div>
     </section>
 
-    <!-- 3. SEZIONE TEST TOOL NLP -->
-     <!--
-    <section id="testAreaSection" class="card" style="display: none; border-top: 4px solid #8b5cf6;">
-      <h2>🧪 Area di Test: Analisi Sentiment</h2>
-      <p class="subtitle">Questa sezione invia una richiesta reale al Tool Server (porta 8001).</p>
-      
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9em; color: #1e293b;">Testo da analizzare:</label>
-        <textarea id="testTextInput" rows="3" placeholder="Scrivi una frase in inglese (es. This project is very beautiful oppure This project is terrible)" style="resize: none;"></textarea>
-      </div>
-      
-      <button onclick="testSentimentTool()" style="background: #8b5cf6;">Analizza con Tool Esterno</button>
-
-      <div id="testResult" style="margin-top: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border, #e2e8f0); display: none;">
-        <h4 style="margin: 0 0 12px 0; color: #1e293b;">Risultato dell'Analisi:</h4>
-        <p style="margin: 6px 0; font-size: 0.95em;"><strong>Testo:</strong> <span id="resText"></span></p>
-        <p style="margin: 6px 0; font-size: 0.95em;"><strong>Sentiment:</strong> <span id="resLabel" style="font-weight: bold; padding: 2px 8px; border-radius: 4px;"></span></p>
-        <p style="margin: 6px 0; font-size: 0.95em;"><strong>Polarity Score:</strong> <span id="resScore"></span></p>
-      </div>
-    </section>
--->
-    
-    <!-- 4. SEZIONE ROADMAP -->
     <section class="card wide">
       <h2>Roadmap studenti</h2>
-      <ol style="margin-top: 10px; color: #334155;">
+      <ol>
         <li>Unificare i contratti dei tool nel Registry</li>
         <li>Migliorare il Router con scoring ed explainability</li>
         <li>Aggiungere Blackboard e log delle sessioni</li>
         <li>Integrare Workbench e visualizzazione dei flussi</li>
       </ol>
     </section>
-
   </main>
 
-<script src="config.js"></script>
-<script src="utils.js"></script>
-<script src="form.js"></script>
-<script src="scope_router.js"></script>
-<script src="registry.js"></script></body>
+  <script src="app.js"></script>
+</body>
 </html>

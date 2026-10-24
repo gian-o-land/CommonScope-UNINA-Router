@@ -1,7 +1,7 @@
 import re
 from fastapi import APIRouter, HTTPException
 from app.models.request import ScopeRequest
-from app.services.memory_store import get_all_tools
+from app.services.memory_store import TOOLS
 from sentence_transformers import SentenceTransformer, util
 
 router = APIRouter()
@@ -137,9 +137,8 @@ def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
 @router.post("/match")
 def match_scope(req: ScopeRequest):
     ranked = []
-    tools_attuali = get_all_tools()
     
-    for tool in tools_attuali:
+    for tool in TOOLS:
         match req.strategy:
             case "v0":
                 s, explanations = score_tool_v0(tool, req)
