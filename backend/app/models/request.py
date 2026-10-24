@@ -7,5 +7,5 @@ class ScopeRequest(BaseModel):
     desired_capabilities: List[str] = Field(default_factory=list)
     domain: Optional[str] = None
     top_k: int = 3
-    strategy: str = "v3" # Possibili valori: "v0" (baseline/substrig), "v1" (token-based), "v2" (semantic-based), "v3" (hybrid)
+    strategy: str = "v4" # Possibili valori: "v0" (baseline/substrig), "v1" (token-based), "v2" (semantic-based), "v3" (hybrid), "v4" (hybrid con diversificazione)
     diversify_results: bool = True

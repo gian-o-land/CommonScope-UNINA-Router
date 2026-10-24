@@ -32,5 +32,17 @@ TEST_CASES = [
         "query": "ho una registrazione vocale, puoi tradurre quello che dicono?",
         "expected_ids": ["registry-6"], 
         "desc": "Recupero cross-domain (Audio + NLP) senza keyword esatte"
+    },
+    {
+        "query": "estrai il testo da questa scansione e fai la sentiment analysis",
+        "expected_ids": ["registry-2", "registry-4"], 
+        "desc": "Test per Diversity Ranking: evita il distrattore registry-5 ed estrae la pipeline OCR + NLP",
+        "diversify_results": True
+    },
+    {
+        "query": "Non mi interessa un tool in grado di eseguire la analize sentiment dei messaggi, voglio solo calcolare il tragitto in macchina per allontanarmi da qui.",
+        "expected_ids": ["registry-3"], 
+        "desc": "Adversarial Test: Negazione esplicita di una capability (v4 Trap)",
+        "diversify_results": False
     }
 ]

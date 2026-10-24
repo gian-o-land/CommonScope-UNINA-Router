@@ -134,6 +134,58 @@ def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
 
     return score, reasons
 
+# --- STRATEGIA v4: Hybrid Search con diversificazione ---
+def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+    score = 0.0
+    reasons = ["[v4] Analisi Ibrida:"]
+    
+    # 1. Ricerca Esatta (Token e Testo Libero)
+    text = req.text.lower()
+    parole_richiesta = set(re.findall(r'\b\w+\b', text))
+    token_score = 0.0
+
+    # MODIFICA A: Depotenziamento dei tag generici (+0.5 invece di +1.0)
+    for tag in tool.scope_tags:
+        if tag.lower() in parole_richiesta:
+            token_score += 0.5
+            reasons.append(f"  - Match tag generico: '{tag}' (+0.5)")
+            
+    # MODIFICA B: Scansione profonda delle capabilities nel testo libero
+    for cap in tool.capabilities:
+        cap_testuale = cap.lower().replace("_", " ")
+        if cap.lower() in text or cap_testuale in text:
+            token_score += 2.0
+            reasons.append(f"  - Match capability nel testo: '{cap}' (+2.0)")
+
+    # Manteniamo il controllo API esplicito
+    for cap in req.desired_capabilities:
+        if cap in tool.capabilities:
+            token_score += 2.0
+            reasons.append(f"  - Match capability richiesta API: '{cap}' (+2.0)")
+
+    score += token_score
+
+    # 2. Ricerca Semantica
+    profilo_tool = f"{tool.name} " + " ".join(tool.scope_tags + tool.capabilities + [tool.description])
+    vettore_richiesta = model.encode(req.text, convert_to_tensor=True)
+    vettore_tool = model.encode(profilo_tool, convert_to_tensor=True)
+    cosine_score = util.cos_sim(vettore_richiesta, vettore_tool).item()
+    
+    if cosine_score > 0.2:
+        punti_semantici = cosine_score * 5.0
+        score += punti_semantici
+        reasons.append(f"  - Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+
+    # 3. Boost sul Dominio
+    if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
+        score += 1.5
+        reasons.append(f"  - Boost dominio esatto: '{req.domain}' (+1.5)")
+
+    if score == 0.0:
+        reasons = ["[v4] Nessuna corrispondenza trovata (né esatta né semantica)."]
+
+    return score, reasons    
+
 @router.post("/match")
 def match_scope(req: ScopeRequest):
     ranked = []
@@ -148,6 +200,8 @@ def match_scope(req: ScopeRequest):
                 s, explanations = score_tool_v2(tool, req)
             case "v3":
                 s, explanations = score_tool_v3(tool, req)
+            case "v4":
+                s, explanations = score_tool_v4(tool, req)
             case _: # Fallback per strategie sconosciute
                 raise HTTPException(status_code=422, detail="Strategia non supportata")
             

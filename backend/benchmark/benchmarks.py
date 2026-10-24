@@ -4,7 +4,7 @@ from benchmark.test_cases import TEST_CASES
 
 def run_benchmarks():
     # Le strategie che vogliamo testare
-    strategie = ["v0", "v1", "v2", "v3"]
+    strategie = ["v0", "v1", "v2", "v3", "v4"]
     
     # Dizionario per tenere traccia dei successi
     risultati = {strat: 0 for strat in strategie}
@@ -20,8 +20,11 @@ def run_benchmarks():
         k_necessari = max(1, len(test["expected_ids"]))
         
         for strat in strategie:
+            # Estraiamo dinamicamente il flag diversificazione se presente, altrimenti usiamo False
+            usa_diversificazione = test.get("diversify_results", False)
+            
             # Creiamo la richiesta specificando la strategia
-            req = ScopeRequest(text=test["query"], top_k=k_necessari, strategy=strat)
+            req = ScopeRequest(text=test["query"], top_k=k_necessari, strategy=strat, diversify_results=usa_diversificazione)
             risposta = match_scope(req)
             
             # Estraiamo tutti gli ID che hanno uno score > 0

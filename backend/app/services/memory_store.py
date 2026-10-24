@@ -61,7 +61,7 @@ TOOLS = [
     ToolRecord(
         id="registry-5",
         name="Financial Data Scraper",
-        description="Analizza documenti testuali per estrarre trend finanziari. (Distrattore per il Router)",
+        description="Analizza documenti testuali per estrarre trend finanziari.",
         version="0.1.0",
         scope_tags=["data", "analysis"],
         capabilities=["scrape_financial_data", "return_trends"],
