@@ -7,3 +7,5 @@ pytest
 httpx
 torch
 sentence-transformers
+spacy
+https://github.com/explosion/spacy-models/releases/download/it_core_news_sm-3.7.0/it_core_news_sm-3.7.0.tar.gzs
