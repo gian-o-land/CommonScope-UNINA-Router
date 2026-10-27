@@ -54,10 +54,17 @@ def test_match_endpoint_explainability_structure():
         assert "tool_name" in primo_risultato
         assert "score" in primo_risultato
         
-        # Controllo critico per i requisiti del progetto: ci deve essere la spiegazione (Explainability)
-        assert "reason" in primo_risultato
-        assert isinstance(primo_risultato["reason"], list)
-        assert len(primo_risultato["reason"]) > 0
+        # Controllo critico per la nuova Explainability strutturata
+        assert "explainability" in primo_risultato
+        exp = primo_risultato["explainability"]
+        
+        # Verifichiamo che sia un dizionario e contenga le chiavi architetturali
+        assert isinstance(exp, dict)
+        assert "strategy" in exp
+        assert "breakdown" in exp
+        assert "matches" in exp
+        assert "logs" in exp
+        assert isinstance(exp["logs"], list)
 
 def test_match_endpoint_invalid_strategy():
     # Simuliamo una richiesta con una strategia non supportata
