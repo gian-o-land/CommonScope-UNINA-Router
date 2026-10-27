@@ -258,7 +258,7 @@ def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, list[str]]:
 
     return score, reasons    
 
-# --- STRATEGIA v5: Hybrid Search con diversificazione e spycy dependency parsing per negazioni ---
+# --- STRATEGIA v5: Hybrid Search con diversificazione e spacy dependency parsing per negazioni ---
 def score_tool_v5(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     score = 0.0
     reasons = ["[v5] Analisi Ibrida + Dependency Parsing (spaCy):"]
