@@ -40,7 +40,7 @@ TEST_CASES = [
         "diversify_results": True
     },
     {
-        "query": "Non mi interessa un tool in grado di eseguire la analize sentiment dei messaggi, voglio solo calcolare il tragitto in macchina per allontanarmi da qui.",
+        "query": "Non mi interessa un tool in grado di eseguire la analyze_sentiment dei messaggi, voglio solo calcolare il tragitto in macchina per allontanarmi da qui.",
         "expected_ids": ["registry-3"], 
         "desc": "Adversarial Test: Negazione esplicita di una capability (v4 Trap)",
         "diversify_results": False
