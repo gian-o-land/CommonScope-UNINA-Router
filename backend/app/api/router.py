@@ -31,6 +31,55 @@ def is_negated_spacy_v0(target_phrase: str, full_text: str) -> bool:
                 
     return False
 
+def is_negated_spacy(target_phrase: str, full_text: str) -> bool:
+    doc = nlp(full_text.lower())
+    
+    parole_separate = target_phrase.lower().replace("_", " ").split()
+    parole_unite = target_phrase.lower().split()
+    target_words = set(parole_separate + parole_unite)
+    
+    # Dizionario dei verbi di esclusione (lemmi base)
+    verbi_escludenti = {"evitare", "ignorare", "saltare", "escludere", "omettere", "scartare"}
+    # Congiunzioni che spezzano il contesto della negazione
+    limiti_contesto = {"ma", "però", "tuttavia", "invece"}
+    
+    for token in doc:
+        if token.text in target_words:
+            negation_count = 0
+            
+            # 1. Controlliamo i figli diretti
+            for child in token.children:
+                if child.lemma_ in {"non", "niente", "nessun", "nessuno"}:
+                    negation_count += 1
+                    
+            # 2. Risaliamo l'albero tenendo conto dei confini della proposizione
+            current = token
+            while current.dep_ != "ROOT":
+                parent = current.head
+                
+                # Prevenzione Scope Leakage: 
+                # Se incontriamo un confine logico avversativo, la negazione precedente non si propaga
+                if any(child.lemma_ in limiti_contesto for child in parent.children):
+                    break
+                    
+                # Controlliamo se il verbo reggente è un verbo escludente esplicito
+                if parent.lemma_ in verbi_escludenti:
+                    negation_count += 1
+                    
+                # Controlliamo se il verbo reggente ha un avverbio di negazione classico
+                for child in parent.children:
+                    if child.dep_ == "advmod" and child.lemma_ in {"non", "neanche", "nemmeno"}:
+                        negation_count += 1
+                        
+                current = parent
+                
+            # Risoluzione Doppia Negazione: 
+            # Pari (0, 2) -> Affermazione. Dispari (1, 3) -> Negazione.
+            if negation_count % 2 != 0:
+                return True
+                
+    return False
+
 # --- STRATEGIA v0: Baseline (Ricerca per sottostringa) ---
 def score_tool_v0(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     score = 0.0
