@@ -81,34 +81,45 @@ def is_negated_spacy(target_phrase: str, full_text: str) -> bool:
     return False
 
 # --- STRATEGIA v0: Baseline (Ricerca per sottostringa) ---
-def score_tool_v0(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+def score_tool_v0(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = []
+    explanation = {
+        "strategy": "v0 (Sottostringa)", "summary": "",
+        "breakdown": {"semantic_score": 0.0, "keyword_score": 0.0, "capability_score": 0.0, "domain_boost": 0.0, "penalties": 0.0},
+        "matches": {"tags": [], "capabilities": [], "negations_detected": []}, "logs": []
+    }
     text = req.text.lower()
 
     for tag in tool.scope_tags:
         if tag.lower() in text:
             score += 1.0
-            reasons.append(f"[v0] Match sottostringa su tag: '{tag}' (+1.0)")
+            explanation["breakdown"]["keyword_score"] += 1.0
+            explanation["matches"]["tags"].append(tag)
+            explanation["logs"].append(f"Match sottostringa su tag: '{tag}' (+1.0)")
 
     for cap in req.desired_capabilities:
         if cap in tool.capabilities:
             score += 2.0
-            reasons.append(f"[v0] Match capability: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(f"{cap} (API)")
+            explanation["logs"].append(f"Match capability API: '{cap}' (+2.0)")
 
     if req.domain and req.domain.lower() in " ".join(tool.scope_tags).lower():
         score += 1.5
-        reasons.append(f"[v0] Match domain: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] = 1.5
+        explanation["logs"].append(f"Match domain: '{req.domain}' (+1.5)")
 
-    if score == 0.0:
-        reasons.append("[v0] Nessuna corrispondenza trovata.")
-
-    return score, reasons
+    explanation["summary"] = "Ammesso." if score > 0 else "Scartato: Nessuna corrispondenza."
+    return score, explanation
 
 # --- STRATEGIA v1: Tokenized ---
-def score_tool_v1(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+def score_tool_v1(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = []
+    explanation = {
+        "strategy": "v1 (Token base)", "summary": "",
+        "breakdown": {"semantic_score": 0.0, "keyword_score": 0.0, "capability_score": 0.0, "domain_boost": 0.0, "penalties": 0.0},
+        "matches": {"tags": [], "capabilities": [], "negations_detected": []}, "logs": []
+    }
     text = req.text.lower()
     
     # Divide la frase in parole singole (token) ignorando la punteggiatura
@@ -117,26 +128,34 @@ def score_tool_v1(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     for tag in tool.scope_tags:
         if tag.lower() in parole_richiesta:
             score += 1.0
-            reasons.append(f"[v1] Match parola chiave esatta: '{tag}' (+1.0)")
+            explanation["breakdown"]["keyword_score"] += 1.0
+            explanation["matches"]["tags"].append(tag)
+            explanation["logs"].append(f"Match parola chiave esatta: '{tag}' (+1.0)")
 
     for cap in req.desired_capabilities:
         if cap in tool.capabilities:
             score += 2.0
-            reasons.append(f"[v1] Match capability: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(f"{cap} (API)")
+            explanation["logs"].append(f"Match capability API: '{cap}' (+2.0)")
 
     if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
         score += 1.5
-        reasons.append(f"[v1] Match domain: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] = 1.5
+        explanation["logs"].append(f"Match domain: '{req.domain}' (+1.5)")
 
-    if score == 0.0:
-        reasons.append("[v1] Nessuna corrispondenza trovata.")    
+    explanation["summary"] = "Ammesso." if score > 0 else "Scartato: Nessuna corrispondenza."  
 
-    return score, reasons
+    return score, explanation
 
 # --- STRATEGIA v2: Semantic Matching ---
-def score_tool_v2(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+def score_tool_v2(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = []
+    explanation = {
+        "strategy": "v2 (Semantica)", "summary": "",
+        "breakdown": {"semantic_score": 0.0, "keyword_score": 0.0, "capability_score": 0.0, "domain_boost": 0.0, "penalties": 0.0},
+        "matches": {"tags": [], "capabilities": [], "negations_detected": []}, "logs": []
+    }
     
     # Uniamo le parole chiave del tool per creare un "profilo" testuale
     profilo_tool = f"{tool.name} " + " ".join(tool.scope_tags + tool.capabilities + [tool.description])
@@ -152,21 +171,27 @@ def score_tool_v2(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     if cosine_score > 0.2:
         punti_semantici = cosine_score * 5.0
         score += punti_semantici
-        reasons.append(f"[v2] Match Semantico ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+        explanation["breakdown"]["semantic_score"] = round(punti_semantici, 2)
+        explanation["logs"].append(f"Match Semantico ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
     else:
-        reasons.append(f"[v2] Affinità semantica troppo bassa ({cosine_score:.2f})")
-
+        explanation["logs"].append(f"Affinità semantica troppo bassa ({cosine_score:.2f})")
     # Aggiungiamo i bonus statici di dominio se applicabili
     if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
         score += 1.5
-        reasons.append(f"[v2] Boost dominio esatto: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] = 1.5
+        explanation["logs"].append(f"Match domain: '{req.domain}' (+1.5)")
 
-    return score, reasons
+    explanation["summary"] = "Ammesso." if score > 0 else "Scartato: Nessuna corrispondenza semantica."
+    return score, explanation
 
 # --- STRATEGIA v3: Hybrid Search (Token + Semantica) ---
-def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = ["[v3] Analisi Ibrida:"]
+    explanation = {
+        "strategy": "v3 (Ibrida Base)", "summary": "",
+        "breakdown": {"semantic_score": 0.0, "keyword_score": 0.0, "capability_score": 0.0, "domain_boost": 0.0, "penalties": 0.0},
+        "matches": {"tags": [], "capabilities": [], "negations_detected": []}, "logs": []
+    }
     
     # 1. Ricerca Esatta (Token)
     text = req.text.lower()
@@ -176,12 +201,16 @@ def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     for tag in tool.scope_tags:
         if tag.lower() in parole_richiesta:
             token_score += 1.0
-            reasons.append(f"  - Match parola chiave: '{tag}' (+1.0)")
+            explanation["breakdown"]["keyword_score"] += 1.0
+            explanation["matches"]["tags"].append(tag)
+            explanation["logs"].append(f"Match parola chiave: '{tag}' (+1.0)")
             
     for cap in req.desired_capabilities:
         if cap in tool.capabilities:
             token_score += 2.0
-            reasons.append(f"  - Match capability: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(cap)
+            explanation["logs"].append(f"Match capability: '{cap}' (+2.0)")
 
     score += token_score
 
@@ -194,23 +223,28 @@ def score_tool_v3(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     if cosine_score > 0.2:
         punti_semantici = cosine_score * 5.0
         score += punti_semantici
-        reasons.append(f"  - Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+        explanation["breakdown"]["semantic_score"] += punti_semantici
+        explanation["logs"].append(f"Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
 
     # 3. Boost sul Dominio (Applicato una sola volta)
     if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
         score += 1.5
-        reasons.append(f"  - Boost dominio esatto: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] += 1.5
+        explanation["logs"].append(f"Boost dominio esatto: '{req.domain}' (+1.5)")
 
-    if score == 0.0:
-        reasons = ["[v3] Nessuna corrispondenza trovata (né esatta né semantica)."]
+    explanation["summary"] = "Ammesso." if score > 0 else "Scartato: Nessuna corrispondenza."
 
-    return score, reasons
+    return score, explanation
 
 # --- STRATEGIA v4: Hybrid Search con diversificazione ---
-def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = ["[v4] Analisi Ibrida:"]
-    
+    explanation = {
+        "strategy": "v4 (Deep Capability Scanning)", "summary": "",
+        "breakdown": {"semantic_score": 0.0, "keyword_score": 0.0, "capability_score": 0.0, "domain_boost": 0.0, "penalties": 0.0},
+        "matches": {"tags": [], "capabilities": [], "negations_detected": []}, "logs": []
+    }
+
     # 1. Ricerca Esatta (Token e Testo Libero)
     text = req.text.lower()
     parole_richiesta = set(re.findall(r'\b\w+\b', text))
@@ -220,20 +254,26 @@ def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     for tag in tool.scope_tags:
         if tag.lower() in parole_richiesta:
             token_score += 0.5
-            reasons.append(f"  - Match tag generico: '{tag}' (+0.5)")
+            explanation["breakdown"]["keyword_score"] += 0.5
+            explanation["matches"]["tags"].append(tag)
+            explanation["logs"].append(f"Match tag generico: '{tag}' (+0.5)")
             
     # 2° differenza con v3: Scansione profonda delle capabilities nel testo libero
     for cap in tool.capabilities:
         cap_testuale = cap.lower().replace("_", " ")
         if cap.lower() in text or cap_testuale in text:
             token_score += 2.0
-            reasons.append(f"  - Match capability nel testo: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(cap)
+            explanation["logs"].append(f"Match capability nel testo: '{cap}' (+2.0)")
 
     # Manteniamo il controllo API esplicito
     for cap in req.desired_capabilities:
         if cap in tool.capabilities:
             token_score += 2.0
-            reasons.append(f"  - Match capability richiesta API: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(cap)
+            explanation["logs"].append(f"Match capability richiesta API: '{cap}' (+2.0)")
 
     score += token_score
 
@@ -246,54 +286,82 @@ def score_tool_v4(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     if cosine_score > 0.2:
         punti_semantici = cosine_score * 5.0
         score += punti_semantici
-        reasons.append(f"  - Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+        explanation["breakdown"]["semantic_score"] += punti_semantici
+        explanation["logs"].append(f"Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
 
     # 3. Boost sul Dominio
     if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
         score += 1.5
-        reasons.append(f"  - Boost dominio esatto: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] += 1.5
+        explanation["logs"].append(f"Boost dominio esatto: '{req.domain}' (+1.5)")
 
-    if score == 0.0:
-        reasons = ["[v4] Nessuna corrispondenza trovata (né esatta né semantica)."]
+    explanation["summary"] = "Ammesso." if score > 0 else "Scartato: Nessuna corrispondenza."
+    return score, explanation
 
-    return score, reasons    
-
-# --- STRATEGIA v5: Hybrid Search con diversificazione e spacy dependency parsing per negazioni ---
-def score_tool_v5(tool, req: ScopeRequest) -> tuple[float, list[str]]:
+# --- STRATEGIA v5: Hybrid Search + Dependency Parsing Strutturato ---
+def score_tool_v5(tool, req: ScopeRequest) -> tuple[float, dict]:
     score = 0.0
-    reasons = ["[v5] Analisi Ibrida + Dependency Parsing (spaCy):"]
+    
+    # Inizializzazione dell'oggetto di Explainability Strutturata
+    explanation = {
+        "strategy": "v5 (Hybrid + Dependency Parsing)",
+        "summary": "",
+        "breakdown": {
+            "semantic_score": 0.0,
+            "keyword_score": 0.0,
+            "capability_score": 0.0,
+            "domain_boost": 0.0,
+            "penalties": 0.0
+        },
+        "matches": {
+            "tags": [],
+            "capabilities": [],
+            "negations_detected": []
+        },
+        "logs": []
+    }
     
     text = req.text.lower()
     parole_richiesta_set = set(re.findall(r'\b\w+\b', text))
     token_score = 0.0
 
-    # 1. Scansione Tag con controllo albero sintattico
+    # 1. Scansione Tag 
     for tag in tool.scope_tags:
         if tag.lower() in parole_richiesta_set:
             if is_negated_spacy(tag.lower(), text):
                 token_score -= 2.0
-                reasons.append(f"  - Tag negato sintatticamente: '{tag}' (-2.0)")
+                explanation["breakdown"]["penalties"] -= 2.0
+                explanation["matches"]["negations_detected"].append(tag)
+                explanation["logs"].append(f"Tag negato: '{tag}' (-2.0)")
             else:
                 token_score += 0.5
-                reasons.append(f"  - Match tag generico: '{tag}' (+0.5)")
+                explanation["breakdown"]["keyword_score"] += 0.5
+                explanation["matches"]["tags"].append(tag)
+                explanation["logs"].append(f"Match tag: '{tag}' (+0.5)")
 
-    # 2. Deep Capability Scanning con controllo albero sintattico
+    # 2. Deep Capability Scanning 
     for cap in tool.capabilities:
         cap_testuale = cap.lower().replace("_", " ")
         if cap.lower() in text or cap_testuale in text:
             target = cap.lower() if cap.lower() in text else cap_testuale
             if is_negated_spacy(target, text):
                 token_score -= 5.0
-                reasons.append(f"  - Capability negata sintatticamente: '{cap}' (-5.0)")
+                explanation["breakdown"]["penalties"] -= 5.0
+                explanation["matches"]["negations_detected"].append(cap)
+                explanation["logs"].append(f"Capability negata: '{cap}' (-5.0)")
             else:
                 token_score += 2.0
-                reasons.append(f"  - Match capability nel testo: '{cap}' (+2.0)")
+                explanation["breakdown"]["capability_score"] += 2.0
+                explanation["matches"]["capabilities"].append(cap)
+                explanation["logs"].append(f"Capability testuale: '{cap}' (+2.0)")
 
     # 3. Controllo API esplicito
     for cap in req.desired_capabilities:
         if cap in tool.capabilities:
             token_score += 2.0
-            reasons.append(f"  - Match capability richiesta API: '{cap}' (+2.0)")
+            explanation["breakdown"]["capability_score"] += 2.0
+            explanation["matches"]["capabilities"].append(f"{cap} (API)")
+            explanation["logs"].append(f"Capability API: '{cap}' (+2.0)")
 
     score += token_score
 
@@ -306,17 +374,21 @@ def score_tool_v5(tool, req: ScopeRequest) -> tuple[float, list[str]]:
     if cosine_score > 0.2:
         punti_semantici = cosine_score * 5.0
         score += punti_semantici
-        reasons.append(f"  - Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
+        explanation["breakdown"]["semantic_score"] = round(punti_semantici, 2)
+        explanation["logs"].append(f"Affinità Semantica ({cosine_score:.2f}) -> +{punti_semantici:.2f}")
 
     # 5. Boost sul Dominio
     if req.domain and req.domain.lower() in [t.lower() for t in tool.scope_tags]:
         score += 1.5
-        reasons.append(f"  - Boost dominio esatto: '{req.domain}' (+1.5)")
+        explanation["breakdown"]["domain_boost"] = 1.5
+        explanation["logs"].append(f"Boost dominio esatto: '{req.domain}' (+1.5)")
 
     if score <= 0.0:
-        return 0.0, ["[v5] Scartato: punteggio nullo o negativo a causa di negazioni o bassa affinità."]
+        explanation["summary"] = "Scartato: punteggio nullo o penalità per negazione prevalenti."
+        return 0.0, explanation
 
-    return score, reasons    
+    explanation["summary"] = "Ammesso: profilo corrispondente alle richieste."
+    return score, explanation
 
 @router.post("/match")
 def match_scope(req: ScopeRequest):
@@ -324,42 +396,29 @@ def match_scope(req: ScopeRequest):
     
     for tool in TOOLS:
         match req.strategy:
-            case "v0":
-                s, explanations = score_tool_v0(tool, req)
-            case "v1":
-                s, explanations = score_tool_v1(tool, req)
-            case "v2":
-                s, explanations = score_tool_v2(tool, req)
-            case "v3":
-                s, explanations = score_tool_v3(tool, req)
-            case "v4":
-                s, explanations = score_tool_v4(tool, req)
-            case "v5":
-                s, explanations = score_tool_v5(tool, req)
-            case _: # Fallback per strategie sconosciute
-                raise HTTPException(status_code=422, detail="Strategia non supportata")
+            case "v0": s, exp = score_tool_v0(tool, req)
+            case "v1": s, exp = score_tool_v1(tool, req)
+            case "v2": s, exp = score_tool_v2(tool, req)
+            case "v3": s, exp = score_tool_v3(tool, req)
+            case "v4": s, exp = score_tool_v4(tool, req)
+            case "v5": s, exp = score_tool_v5(tool, req)
+            case _: raise HTTPException(status_code=422, detail="Strategia non supportata")
             
-        # Filtriamo via i tool che non hanno superato i controlli (score a 0)
         if s > 0:
             ranked.append({
                 "tool_id": tool.id,
                 "tool_name": tool.name,
                 "tags": [t.lower() for t in tool.scope_tags],
                 "score": round(s, 2),
-                "reason": explanations
+                "explainability": exp # Rinominato da reason per maggiore chiarezza[cite: 16]
             })
         
-    # Ordiniamo prima per punteggio assoluto
     ranked.sort(key=lambda x: x["score"], reverse=True)
-    
-    
     final_results = diversity_ranking(ranked, req.top_k) if req.diversify_results else ranked[:req.top_k]
     
-    # Puliamo l'output nascondendo la variabile d'appoggio all_tags
     for r in final_results:
         r.pop("tags", None)
 
-    # Restituiamo il dizionario col formato corretto
     return {"query": req.model_dump(), "results": final_results}
 
 # Algoritmo per diversificare i risultati: prende il migliore per ogni scope fino a riempire il top_k

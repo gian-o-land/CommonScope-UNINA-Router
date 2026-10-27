@@ -103,17 +103,57 @@ async function runRouter() {
       const div = document.createElement("div");
       div.className = "result";
       
-      let reasonsHtml = `<ul class="reason-list">`;
-      if (Array.isArray(item.reason)) {
-        item.reason.forEach(r => { reasonsHtml += `<li>${r}</li>`; });
-      } else {
-        reasonsHtml += `<li>${item.reason}</li>`;
-      }
-      reasonsHtml += `</ul>`;
+      // Estrazione dei dati di explainability
+      const exp = item.explainability;
+      const b = exp.breakdown;
+      const m = exp.matches;
 
-      div.innerHTML = `<strong>${item.tool_name}</strong> (${item.tool_id})
-        <div class="score">Score Totale: ${item.score}</div>
-        ${reasonsHtml}`;
+      // Generazione Badge per i match
+      const tagsHtml = m.tags.map(t => `<span class="badge tag">${t}</span>`).join('');
+      const capsHtml = m.capabilities.map(c => `<span class="badge cap">${c}</span>`).join('');
+      const negsHtml = m.negations_detected.map(n => `<span class="badge neg">${n}</span>`).join('');
+
+      let matchesHtml = `<div class="matches-container">`;
+      if (tagsHtml) matchesHtml += `<div><strong>Tags:</strong> ${tagsHtml}</div>`;
+      if (capsHtml) matchesHtml += `<div><strong>Capabilities:</strong> ${capsHtml}</div>`;
+      if (negsHtml) matchesHtml += `<div><strong>Negazioni:</strong> ${negsHtml}</div>`;
+      matchesHtml += `</div>`;
+
+      // Generazione griglia per i punteggi matematici (Breakdown)
+      const breakdownHtml = `
+        <div class="breakdown-grid">
+          <div class="bd-item"><span>Semantica:</span> <strong>+${b.semantic_score.toFixed(2)}</strong></div>
+          <div class="bd-item"><span>Keywords:</span> <strong>+${b.keyword_score.toFixed(2)}</strong></div>
+          <div class="bd-item"><span>Capacità:</span> <strong>+${b.capability_score.toFixed(2)}</strong></div>
+          <div class="bd-item"><span>Dominio:</span> <strong>+${b.domain_boost.toFixed(2)}</strong></div>
+          ${b.penalties < 0 ? `<div class="bd-item penalty"><span>Penalità:</span> <strong>${b.penalties.toFixed(2)}</strong></div>` : ''}
+        </div>
+      `;
+
+      // Log testuali nascosti in un pannello espandibile
+      let logsHtml = `<ul class="reason-list">`;
+      exp.logs.forEach(log => { logsHtml += `<li>${log}</li>`; });
+      logsHtml += `</ul>`;
+
+      // Assemblaggio finale dell'interfaccia di spiegazione
+      const reasonsHtml = `
+        <div class="explainability-box">
+          <div class="exp-strategy">${exp.strategy}</div>
+          <div class="exp-summary">${exp.summary}</div>
+          ${breakdownHtml}
+          ${matchesHtml}
+          <details class="exp-logs-toggle">
+            <summary>Visualizza log di tracciamento</summary>
+            ${logsHtml}
+          </details>
+        </div>
+      `;
+
+      div.innerHTML = `
+        <strong>${item.tool_name}</strong> (${item.tool_id})
+        <div class="score">Score Totale: <strong>${item.score.toFixed(2)}</strong></div>
+        ${reasonsHtml}
+      `;
       out.appendChild(div);
     });
   } catch (err) {

@@ -160,3 +160,88 @@ select, input[type="text"], input[type="number"] {
 .reason-list li {
   margin-bottom: 4px;
 }
+/* Box principale dell'Explainability */
+.explainability-box {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+}
+.exp-strategy {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.exp-summary {
+  font-weight: bold;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+/* Griglia per il Breakdown Matematico */
+.breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+}
+.bd-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.bd-item strong {
+  color: var(--text);
+}
+.bd-item.penalty strong {
+  color: #dc2626;
+}
+
+/* Badge per Tag, Capabilities e Negazioni */
+.matches-container {
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+.matches-container > div {
+  margin-bottom: 6px;
+}
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-right: 6px;
+  margin-left: 4px;
+}
+.badge.tag { background: #e0f2fe; color: #0369a1; }
+.badge.cap { background: #dcfce7; color: #15803d; }
+.badge.neg { background: #fee2e2; color: #b91c1c; }
+
+/* Menu a tendina per i log nativi */
+.exp-logs-toggle {
+  margin-top: 10px;
+}
+.exp-logs-toggle summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--accent);
+  outline: none;
+}
+.exp-logs-toggle .reason-list {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 10px 10px 24px;
+  margin-top: 8px;
+}
