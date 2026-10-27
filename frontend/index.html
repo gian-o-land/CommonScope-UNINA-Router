@@ -26,11 +26,73 @@
 
     <section class="card">
       <h2>Scope Router</h2>
-      <p>Invia una richiesta al Router e mostra i tool più pertinenti.</p>
+      <p>Invia una richiesta al Router configurando la strategia e le capacità richieste.</p>
+      
       <label>Richiesta</label>
-      <textarea id="queryText" rows="5">Ho bisogno di estrarre testo da un documento.</textarea>
-      <label>Dominio (opzionale)</label>
-      <input id="domainText" type="text" placeholder="document" />
+      <textarea id="queryText" rows="3">Ho bisogno di estrarre testo da un documento.</textarea>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Strategia</label>
+          <select id="strategySelect">
+            <option value="v0">v0 (Sottostringa)</option>
+            <option value="v1">v1 (Token base)</option>
+            <option value="v2">v2 (Semantica Pura)</option>
+            <option value="v3">v3 (Ibrida v1)</option>
+            <option value="v4">v4 (Deep Capability Scanning)</option>
+            <option value="v5" selected>v5 (Dependency Parsing)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Risultati (top_k)</label>
+          <input id="topKInput" type="number" value="3" min="1" max="10" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Dominio (opzionale)</label>
+          <div class="dropdown-check-list" id="domainDropdown">
+            <span class="anchor">Seleziona domini...</span>
+            <ul class="items">
+              <li><label><input type="checkbox" value="vision"> vision</label></li>
+              <li><label><input type="checkbox" value="classification"> classification</label></li>
+              <li><label><input type="checkbox" value="document"> document</label></li>
+              <li><label><input type="checkbox" value="ocr"> ocr</label></li>
+              <li><label><input type="checkbox" value="planning"> planning</label></li>
+              <li><label><input type="checkbox" value="maps"> maps</label></li>
+              <li><label><input type="checkbox" value="routing"> routing</label></li>
+              <li><label><input type="checkbox" value="nlp"> nlp</label></li>
+              <li><label><input type="checkbox" value="text"> text</label></li>
+              <li><label><input type="checkbox" value="data"> data</label></li>
+              <li><label><input type="checkbox" value="analysis"> analysis</label></li>
+              <li><label><input type="checkbox" value="audio"> audio</label></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Capacità Desiderate (opzionali)</label>
+          <div class="dropdown-check-list" id="capabilitiesDropdown">
+            <span class="anchor">Seleziona capacità...</span>
+            <ul class="items">
+              <li><label><input type="checkbox" value="classify_image"> classify_image</label></li>
+              <li><label><input type="checkbox" value="return_top_label"> return_top_label</label></li>
+              <li><label><input type="checkbox" value="extract_text"> extract_text</label></li>
+              <li><label><input type="checkbox" value="parse_document"> parse_document</label></li>
+              <li><label><input type="checkbox" value="plan_route"> plan_route</label></li>
+              <li><label><input type="checkbox" value="estimate_distance"> estimate_distance</label></li>
+              <li><label><input type="checkbox" value="analyze_sentiment"> analyze_sentiment</label></li>
+              <li><label><input type="checkbox" value="return_polarity"> return_polarity</label></li>
+              <li><label><input type="checkbox" value="scrape_financial_data"> scrape_financial_data</label></li>
+              <li><label><input type="checkbox" value="return_trends"> return_trends</label></li>
+              <li><label><input type="checkbox" value="transcribe_audio"> transcribe_audio</label></li>
+              <li><label><input type="checkbox" value="translate_text"> translate_text</label></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       <button id="routeBtn">Esegui matching</button>
       <div id="routeResults"></div>
     </section>
