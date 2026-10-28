@@ -54,7 +54,7 @@ def test_match_endpoint_explainability_structure():
         assert "tool_name" in primo_risultato
         assert "score" in primo_risultato
         
-        # Controllo critico per la nuova Explainability strutturata
+        # Controllo critico per la Explainability
         assert "explainability" in primo_risultato
         exp = primo_risultato["explainability"]
         
